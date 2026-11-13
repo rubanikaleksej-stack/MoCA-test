@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Montreal Cognitive Assessment (MoCA)</title>
+  <title>MoCA-тест — Покроковий клінічний помічник</title>
   <style>
     :root {
       --primary-color: #2563eb;
@@ -30,7 +30,7 @@
       padding: 1rem; text-align: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    header h1 { font-size: 1.5rem; color: var(--primary-color); }
+    header h1 { font-size: 1.4rem; color: var(--primary-color); }
 
     main {
       flex: 1; display: flex; justify-content: center; padding: 1.5rem 1rem;
@@ -40,10 +40,19 @@
       background: var(--card-bg);
       border-radius: 12px;
       padding: 2rem;
-      max-width: 700px; width: 100%;
+      max-width: 750px; width: 100%;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
       border: 1px solid var(--border-color);
+      display: none;
     }
+    .card.active { display: block; }
+
+    .step-indicator {
+      font-size: 0.85rem; font-weight: 700; color: var(--primary-color);
+      text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em;
+    }
+
+    h2 { font-size: 1.25rem; margin-bottom: 1.25rem; color: var(--text-main); }
 
     .form-group { margin-bottom: 1.25rem; }
     .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
@@ -54,18 +63,37 @@
     }
     .form-group input:focus { border-color: var(--primary-color); }
 
-    .section-title {
-      font-size: 1.1rem; font-weight: 700; color: var(--primary-color);
-      margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color);
-      padding-bottom: 0.3rem;
-    }
-
     .subtest-row {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 0.75rem; font-size: 0.95rem; gap: 1rem;
+      margin-bottom: 1rem; font-size: 1rem; gap: 1rem;
     }
     .subtest-row span { flex: 1; }
-    .subtest-row input { width: 90px; text-align: center; padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; }
+    .subtest-row input { width: 90px; text-align: center; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; }
+
+    /* Canvas styling */
+    .drawing-container {
+      background: #f8fafc;
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      text-align: center;
+    }
+    .drawing-container img {
+      max-height: 130px;
+      margin-bottom: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+    canvas {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: crosshair;
+      touch-action: none;
+      display: block;
+      margin: 0.5rem auto;
+    }
 
     .btn-group { display: flex; gap: 1rem; margin-top: 2rem; }
     .btn {
@@ -76,21 +104,37 @@
     .btn:hover { background: var(--primary-hover); }
     .btn-secondary { background: #64748b; }
     .btn-secondary:hover { background: #475569; }
+    .btn-small { padding: 0.4rem 0.8rem; font-size: 0.85rem; flex: none; }
 
-    #test-screen { display: none; }
     .timer-box { background: #eff6ff; padding: 0.75rem; border-radius: 6px; text-align: center; font-weight: 600; margin-bottom: 1rem; color: #1e40af; }
+    
+    .image-grid { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .image-card { text-align: center; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); width: 30%; min-width: 120px; }
+    .image-card img { height: 90px; object-fit: contain; display: block; margin: 0 auto 0.5rem; }
+    .image-card span { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+
+    /* TMT mini nodes grid */
+    .tmt-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1rem; }
+    .tmt-node {
+      background: #ffffff; border: 2px solid var(--primary-color); color: var(--primary-color);
+      font-weight: 700; font-size: 1.1rem; padding: 1rem 0; text-align: center; border-radius: 8px; cursor: pointer;
+      user-select: none; transition: 0.15s;
+    }
+    .tmt-node.clicked { background: #dbeafe; border-color: #93c5fd; color: #94a3b8; cursor: default; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Montreal Cognitive Assessment (MoCA)</h1>
+  <h1>MoCA-тест (Клінічний помічник)</h1>
 </header>
 
 <main>
-  <!-- Setup Screen -->
-  <div id="setup-screen" class="card">
-    <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Дані пацієнта та налаштування</h2>
+
+  <!-- STEP 0: Setup / Passport Data -->
+  <div id="step-0" class="card active">
+    <div class="step-indicator">Крок 1 з 7</div>
+    <h2>Паспортні дані та налаштування</h2>
     
     <div class="form-group">
       <label for="pib">ПІБ пацієнта</label>
@@ -114,104 +158,295 @@
     </div>
 
     <div class="form-group" style="border-top: 1px dashed var(--border-color); padding-top: 1rem;">
-      <label for="script-url" style="color: var(--primary-color);">Google Apps Script URL (MoCA Таблиця)</label>
+      <label for="script-url" style="color: var(--primary-color);">Google Apps Script URL (Таблиця)</label>
       <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/.../exec">
     </div>
 
     <div class="btn-group">
-      <button class="btn" onclick="startMoCATest()">Розпочати тест MoCA</button>
+      <button class="btn" onclick="nextStep(1)">Розпочати тестування</button>
     </div>
   </div>
 
-  <!-- Test Form Screen -->
-  <div id="test-screen" class="card">
-    <h2 id="patient-info-title" style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-muted);"></h2>
-
-    <!-- 1. Visuospatial / Executive -->
-    <div class="section-title">1. Зорово-просторові / Виконавчі функції (макс. 5)</div>
-    <div class="subtest-row"><span>Зв'язування точок (альтернатива) (0-1):</span><input type="number" id="m1" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Кубик (копіювання) (0-1):</span><input type="number" id="m2" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Годинник: контур (0-1):</span><input type="number" id="m3" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Годинник: цифри (0-1):</span><input type="number" id="m4" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Годинник: стрілки (0-1):</span><input type="number" id="m5" min="0" max="1" value="0" oninput="calcTotal()"></div>
-
-    <!-- 2. Naming -->
-    <div class="section-title">2. Називання (макс. 3)</div>
-    <div class="subtest-row"><span>Лев, Носоріг, Верблюд (0-3):</span><input type="number" id="m6" min="0" max="3" value="0" oninput="calcTotal()"></div>
-
-    <!-- 3. Attention -->
-    <div class="section-title">3. Увага (макс. 6)</div>
-    <div class="subtest-row"><span>Повторення цифр прямо (0-1):</span><input type="number" id="m7" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Повторення цифр зворотно (0-1):</span><input type="number" id="m8" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Тест «А» (відстукування) (0-1):</span><input type="number" id="m9" min="0" max="1" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Серійне віднімання від 100 по 7 (0-3):</span><input type="number" id="m10" min="0" max="3" value="0" oninput="calcTotal()"></div>
-
-    <!-- 4. Language -->
-    <div class="section-title">4. Мовлення (макс. 3)</div>
-    <div class="subtest-row"><span>Повторення двох речень (0-2):</span><input type="number" id="m11" min="0" max="2" value="0" oninput="calcTotal()"></div>
-    <div class="subtest-row"><span>Біглість мови (слова на «Л» за 1 хв) (0-1):</span><input type="number" id="m12" min="0" max="1" value="0" oninput="calcTotal()"></div>
+  <!-- STEP 1: TMT Mini -->
+  <div id="step-1" class="card">
+    <div class="step-indicator">Крок 2 з 7</div>
+    <h2>Альтернативний TMT (З'єднання точок: 1-А-2-Б-3-В)</h2>
+    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Попросіть пацієнта послідовно натискати кружечки. Відлік часу почнеться з першого кліку!</p>
     
-    <div class="timer-box">
-      Секундомір для проби на літеру «Л»: <span id="timer">60</span> с 
-      <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin-left: 1rem;" onclick="startTimer()">Старт 1 хв</button>
+    <div class="timer-box">Час: <span id="tmt-timer">0.0</span> с | Помилок: <span id="tmt-errors">0</span></div>
+    
+    <div class="tmt-grid" id="tmt-container">
+      <!-- Generated via JS -->
     </div>
 
-    <!-- 5. Abstraction -->
-    <div class="section-title">5. Абстрактне мислення (макс. 2)</div>
-    <div class="subtest-row"><span>Пояснення схожості (0-2):</span><input type="number" id="m13" min="0" max="2" value="0" oninput="calcTotal()"></div>
+    <div class="subtest-row" style="margin-top: 1.5rem;">
+      <span>Бари за Трейл Мейкінг (0-1):</span>
+      <input type="number" id="m1" min="0" max="1" value="0">
+    </div>
 
-    <!-- 6. Delayed Recall -->
-    <div class="section-title">6. Відкладене відтворення пам'яті (макс. 5)</div>
-    <div class="subtest-row"><span>Пригадування слів без підказок (0-5):</span><input type="number" id="m14" min="0" max="5" value="0" oninput="calcTotal()"></div>
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="prevStep(0)">Назад</button>
+      <button class="btn" onclick="nextStep(2)">Далі</button>
+    </div>
+  </div>
 
-    <!-- 7. Orientation -->
-    <div class="section-title">7. Орієнтування (макс. 6)</div>
-    <div class="subtest-row"><span>Дата, місяць, рік, день, місце, місто (0-6):</span><input type="number" id="m15" min="0" max="6" value="0" oninput="calcTotal()"></div>
+  <!-- STEP 2: Visuospatial / Cube & Clock -->
+  <div id="step-2" class="card">
+    <div class="step-indicator">Крок 3 з 7</div>
+    <h2>Зорово-просторові / Виконавчі функції</h2>
+    
+    <!-- Cube -->
+    <div class="drawing-container">
+      <p style="font-weight: 600; margin-bottom: 0.5rem;">Зразок куба[cite: 1] та полотно для малювання пацієнтом</p>
+      <img src="images/cube.png" alt="Зразок куба" onerror="this.style.display='none'">
+      <canvas id="cubeCanvas" width="300" height="140"></canvas>
+      <button class="btn btn-secondary btn-small" onclick="clearCanvas('cubeCanvas')" style="margin-top: 0.5rem;">Очистити куб</button>
+    </div>
+    <div class="subtest-row"><span>Кубик (оцінка лікаря 0-1):</span><input type="number" id="m2" min="0" max="1" value="0"></div>
 
-    <!-- Summary Box -->
-    <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; text-align: center;">
+    <!-- Clock -->
+    <div class="drawing-container">
+      <p style="font-weight: 600; margin-bottom: 0.5rem;">Малювання годинника (Час: 11:10)</p>
+      <canvas id="clockCanvas" width="300" height="180"></canvas>
+      <button class="btn btn-secondary btn-small" onclick="clearCanvas('clockCanvas')" style="margin-top: 0.5rem;">Очистити годинник</button>
+    </div>
+    <div class="subtest-row"><span>Годинник: контур (0-1):</span><input type="number" id="m3" min="0" max="1" value="0"></div>
+    <div class="subtest-row"><span>Годинник: цифри (0-1):</span><input type="number" id="m4" min="0" max="1" value="0"></div>
+    <div class="subtest-row"><span>Годинник: стрілки (0-1):</span><input type="number" id="m5" min="0" max="1" value="0"></div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="prevStep(1)">Назад</button>
+      <button class="btn" onclick="nextStep(3)">Далі</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Naming -->
+  <div id="step-3" class="card">
+    <div class="step-indicator">Крок 4 з 7</div>
+    <h2>Називання тварин</h2>
+    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Покажіть тварин пацієнту та зафіксуйте кількість правильних назв.</p>
+    
+    <div class="image-grid">
+      <div class="image-card"><img src="images/lion.png" alt="Лев" onerror="this.src=''"><br><span>Лев[cite: 2]</span></div>
+      <div class="image-card"><img src="images/rhino.png" alt="Носоріг" onerror="this.src=''"><br><span>Носоріг[cite: 3]</span></div>
+      <div class="image-card"><img src="images/camel.png" alt="Верблюд" onerror="this.src=''"><br><span>Верблюд[cite: 4]</span></div>
+    </div>
+
+    <div class="subtest-row"><span>Називання (0-3):</span><input type="number" id="m6" min="0" max="3" value="0"></div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="prevStep(2)">Назад</button>
+      <button class="btn" onclick="nextStep(4)">Далі</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Attention -->
+  <div id="step-4" class="card">
+    <div class="step-indicator">Крок 5 з 7</div>
+    <h2>Увага</h2>
+    <div class="subtest-row"><span>Повторення цифр прямо (0-1):</span><input type="number" id="m7" min="0" max="1" value="0"></div>
+    <div class="subtest-row"><span>Повторення цифр зворотно (0-1):</span><input type="number" id="m8" min="0" max="1" value="0"></div>
+    <div class="subtest-row"><span>Тест «А» (відстукування) (0-1):</span><input type="number" id="m9" min="0" max="1" value="0"></div>
+    <div class="subtest-row"><span>Серійне віднімання від 100 по 7 (0-3):</span><input type="number" id="m10" min="0" max="3" value="0"></div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="prevStep(3)">Назад</button>
+      <button class="btn" onclick="nextStep(5)">Далі</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Language & Abstraction -->
+  <div id="step-5" class="card">
+    <div class="step-indicator">Крок 6 з 7</div>
+    <h2>Мовлення та Абстрактне мислення</h2>
+    <div class="subtest-row"><span>Повторення двох речень (0-2):</span><input type="number" id="m11" min="0" max="2" value="0"></div>
+    <div class="subtest-row"><span>Біглість мови (слова на «Л» за 1 хв) (0-1):</span><input type="number" id="m12" min="0" max="1" value="0"></div>
+    
+    <div class="timer-box">
+      Секундомір для проби на літеру «Л»: <span id="moca-timer">60</span> с 
+      <button class="btn btn-secondary btn-small" style="margin-left: 1rem;" onclick="startMocaTimer()">Старт 1 хв</button>
+    </div>
+
+    <div class="subtest-row"><span>Пояснення схожості (абстракція) (0-2):</span><input type="number" id="m13" min="0" max="2" value="0"></div>
+
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="prevStep(4)">Назад</button>
+      <button class="btn" onclick="nextStep(6)">Далі</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: Delayed Recall, Orientation & Summary -->
+  <div id="step-6" class="card">
+    <div class="step-indicator">Крок 7 з 7</div>
+    <h2>Пам'ять, Орієнтування та Підсумок</h2>
+    <div class="subtest-row"><span>Відкладене відтворення слів (0-5):</span><input type="number" id="m14" min="0" max="5" value="0"></div>
+    <div class="subtest-row"><span>Орієнтування (дата, місце тощо) (0-6):</span><input type="number" id="m15" min="0" max="6" value="0"></div>
+
+    <div style="background: #f1f5f9; padding: 1.25rem; border-radius: 8px; margin-top: 1.5rem; text-align: center;">
       <div style="font-size: 1.1rem; font-weight: 600;">Сума балів: <span id="raw-score">0</span> / 30</div>
       <div style="font-size: 1rem; color: var(--text-muted); margin-top: 0.3rem;">Бонус за освіту (≤ 11 р.): <span id="edu-bonus">0</span></div>
       <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color); margin-top: 0.5rem;">Загальний бал MoCA: <span id="total-score">0</span> / 30</div>
     </div>
 
     <div class="btn-group">
-      <button class="btn btn-secondary" onclick="exitToSetup()">Назад / Скасувати</button>
+      <button class="btn btn-secondary" onclick="prevStep(5)">Назад</button>
       <button class="btn" onclick="submitMoCA()">Зберегти в Google Таблицю</button>
     </div>
   </div>
+
 </main>
 
 <script>
-  let GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo9twcL41oq7iKKXrBsED2hmLz3aHybsqXnrQGhGEr9xcR18JpLC2wC8dy2iL7XiaJ/exec";
+  let currentStep = 0;
+  let GOOGLE_SCRIPT_URL = "";
   document.getElementById('test-date').valueAsDate = new Date();
 
   if(localStorage.getItem('moca_script_url')) {
     document.getElementById('script-url').value = localStorage.getItem('moca_script_url');
   }
 
-  let timerInterval = null;
+  function showStep(step) {
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    document.getElementById(`step-${step}`).classList.add('active');
+    window.scrollTo(0,0);
+    if(step === 6) calcTotal();
+  }
 
-  function startMoCATest() {
-    const pib = document.getElementById('pib').value.trim();
-    const age = document.getElementById('age').value;
-    const edu = document.getElementById('education').value;
-    const url = document.getElementById('script-url').value.trim();
+  function nextStep(step) {
+    if(step === 1) {
+      const pib = document.getElementById('pib').value.trim();
+      const age = document.getElementById('age').value;
+      const edu = document.getElementById('education').value;
+      const url = document.getElementById('script-url').value.trim();
 
-    if(!pib || !age || !edu) {
-      alert("Будь ласка, заповніть ПІБ, вік та рівень освіти пацієнта.");
-      return;
+      if(!pib || !age || !edu) {
+        alert("Будь ласка, заповніть ПІБ, вік та рівень освіти пацієнта.");
+        return;
+      }
+      if(url) {
+        GOOGLE_SCRIPT_URL = url;
+        localStorage.setItem('moca_script_url', url);
+      }
+    }
+    currentStep = step;
+    showStep(currentStep);
+  }
+
+  function prevStep(step) {
+    currentStep = step;
+    showStep(currentStep);
+  }
+
+  // --- TMT Mini Interactive Logic ---
+  const tmtSequence = ['1', 'А', '2', 'Б', '3', 'В', '4', 'Г', '5', 'Д'];
+  let tmtExpectedIndex = 0;
+  let tmtStartTime = null;
+  let tmtErrorsCount = 0;
+  let tmtTimerInterval = null;
+
+  function initTmt() {
+    const container = document.getElementById('tmt-container');
+    container.innerHTML = '';
+    tmtExpectedIndex = 0;
+    tmtStartTime = null;
+    tmtErrorsCount = 0;
+    document.getElementById('tmt-timer').innerText = "0.0";
+    document.getElementById('tmt-errors').innerText = "0";
+    clearInterval(tmtTimerInterval);
+
+    // Shuffle for interactive grid layout
+    let shuffled = [...tmtSequence].sort(() => Math.random() - 0.5);
+
+    shuffled.forEach(item => {
+      const node = document.createElement('div');
+      node.className = 'tmt-node';
+      node.innerText = item;
+      node.onclick = () => handleTmtClick(item, node);
+      container.appendChild(node);
+    });
+  }
+
+  function handleTmtClick(item, element) {
+    if (element.classList.contains('clicked')) return;
+
+    if (!tmtStartTime) {
+      tmtStartTime = Date.now();
+      tmtTimerInterval = setInterval(() => {
+        let elapsed = ((Date.now() - tmtStartTime) / 1000).toFixed(1);
+        document.getElementById('tmt-timer').innerText = elapsed;
+      }, 100);
     }
 
-    if(url) {
-      GOOGLE_SCRIPT_URL = url;
-      localStorage.setItem('moca_script_url', url);
+    if (item === tmtSequence[tmtExpectedIndex]) {
+      element.classList.add('clicked');
+      tmtExpectedIndex++;
+      if (tmtExpectedIndex === tmtSequence.length) {
+        clearInterval(tmtTimerInterval);
+        document.getElementById('m1').value = 1; // Auto grant point if completed
+      }
+    } else {
+      tmtErrorsCount++;
+      document.getElementById('tmt-errors').innerText = tmtErrorsCount;
+    }
+  }
+  initTmt();
+
+  // --- Canvas Drawing Logic ---
+  function setupCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    let painting = false;
+
+    function startPosition(e) { painting = true; draw(e); }
+    function endPosition() { painting = false; ctx.beginPath(); }
+    function draw(e) {
+      if (!painting) return;
+      e.preventDefault();
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000000';
+
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+      ctx.lineTo(clientX - rect.left, clientY - rect.top);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(clientX - rect.left, clientY - rect.top);
     }
 
-    document.getElementById('patient-info-title').innerText = `Пацієнт: ${pib} | Вік: ${age} р. | Освіта: ${edu} р.`;
-    document.getElementById('setup-screen').style.display = 'none';
-    document.getElementById('test-screen').style.display = 'block';
-    calcTotal();
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchstart', startPosition);
+    canvas.addEventListener('touchend', endPosition);
+    canvas.addEventListener('touchmove', draw);
+  }
+
+  function clearCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  setupCanvas('cubeCanvas');
+  setupCanvas('clockCanvas');
+
+  // --- Calculations & Timer ---
+  let mocaTimerInterval = null;
+  function startMocaTimer() {
+    clearInterval(mocaTimerInterval);
+    let timeLeft = 60;
+    document.getElementById('moca-timer').innerText = timeLeft;
+    mocaTimerInterval = setInterval(() => {
+      timeLeft--;
+      document.getElementById('moca-timer').innerText = timeLeft;
+      if(timeLeft <= 0) {
+        clearInterval(mocaTimerInterval);
+        alert("Час вийшов (1 хвилина)!");
+      }
+    }, 1000);
   }
 
   function calcTotal() {
@@ -231,31 +466,14 @@
     document.getElementById('total-score').innerText = total;
   }
 
-  function startTimer() {
-    clearInterval(timerInterval);
-    let timeLeft = 60;
-    document.getElementById('timer').innerText = timeLeft;
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timer').innerText = timeLeft;
-      if(timeLeft <= 0) {
-        clearInterval(timerInterval);
-        alert("Час вийшов (1 хвилина)!");
-      }
-    }, 1000);
-  }
-
-  function exitToSetup() {
-    clearInterval(timerInterval);
-    document.getElementById('test-screen').style.display = 'none';
-    document.getElementById('setup-screen').style.display = 'block';
-  }
-
+  // --- Submit to Google Sheet ---
   function submitMoCA() {
     if (!GOOGLE_SCRIPT_URL) {
       alert("Не вказано посилання на Google Apps Script URL!");
       return;
     }
+
+    calcTotal();
 
     const payload = {
       pib: document.getElementById('pib').value.trim(),
@@ -281,7 +499,7 @@
       body: JSON.stringify(payload)
     }).then(() => {
       alert("Результати MoCA успішно відправлені у Google Таблицю!");
-      exitToSetup();
+      location.reload();
     }).catch(err => {
       console.error("Помилка:", err);
       alert("Помилка відправки даних.");
