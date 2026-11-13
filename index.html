@@ -110,7 +110,8 @@
     
     .image-grid { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 1.25rem; flex-wrap: wrap; }
     .image-card { text-align: center; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); width: 30%; min-width: 120px; }
-    .image-card img { height: 95px; object-fit: contain; display: block; margin: 0 auto; }
+    .image-card img { height: 90px; object-fit: contain; display: block; margin: 0 auto 0.5rem; }
+    .image-card span { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
 
     /* TMT mini scattered field */
     .tmt-field {
@@ -207,7 +208,7 @@
     
     <!-- Cube -->
     <div class="drawing-container">
-      <p style="font-weight: 600; margin-bottom: 0.5rem;">Зразок куба[cite: 1] та полотно для малювання пацієнтом</p>
+      <p style="font-weight: 600; margin-bottom: 0.5rem;">Зразок куба та полотно для малювання пацієнтом</p>
       <img src="images/cube.png" alt="Зразок куба" onerror="this.style.display='none'">
       <canvas id="cubeCanvas" width="300" height="140"></canvas>
       <button class="btn btn-secondary btn-small" onclick="clearCanvas('cubeCanvas')" style="margin-top: 0.5rem;">Очистити куб</button>
@@ -237,9 +238,9 @@
     <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Покажіть тварин пацієнту та зафіксуйте кількість правильних назв.</p>
     
     <div class="image-grid">
-      <div class="image-card"><img src="images/lion.png" alt="Лев" onerror="this.src=''"></div>
-      <div class="image-card"><img src="images/rhino.png" alt="Носоріг" onerror="this.src=''"></div>
-      <div class="image-card"><img src="images/camel.png" alt="Верблюд" onerror="this.src=''"></div>
+      <div class="image-card"><img src="images/lion.png" alt="Лев" onerror="this.src=''"><br><span>Лев</span></div>
+      <div class="image-card"><img src="images/rhino.png" alt="Носоріг" onerror="this.src=''"><br><span>Носоріг</span></div>
+      <div class="image-card"><img src="images/camel.png" alt="Верблюд" onerror="this.src=''"><br><span>Верблюд</span></div>
     </div>
 
     <div class="subtest-row"><span>Називання (0-3):</span><input type="number" id="m6" min="0" max="3" value="0"></div>
