@@ -110,8 +110,7 @@
     
     .image-grid { display: flex; justify-content: space-around; gap: 15px; margin-bottom: 1.25rem; flex-wrap: wrap; }
     .image-card { text-align: center; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); width: 30%; min-width: 120px; }
-    .image-card img { height: 90px; object-fit: contain; display: block; margin: 0 auto 0.5rem; }
-    .image-card span { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
+    .image-card img { height: 95px; object-fit: contain; display: block; margin: 0 auto; }
 
     /* TMT mini scattered field */
     .tmt-field {
@@ -145,7 +144,7 @@
   <!-- STEP 0: Setup / Passport Data -->
   <div id="step-0" class="card active">
     <div class="step-indicator">Крок 1 з 7</div>
-    <h2>Паспортні дані та налаштування</h2>
+    <h2>Паспортні дані пацієнта</h2>
     
     <div class="form-group">
       <label for="pib">ПІБ пацієнта</label>
@@ -168,11 +167,6 @@
       <input type="date" id="test-date">
     </div>
 
-    <div class="form-group" style="border-top: 1px dashed var(--border-color); padding-top: 1rem;">
-      <label for="script-url" style="color: var(--primary-color);">Google Apps Script URL (Таблиця)</label>
-      <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-
     <div class="btn-group">
       <button class="btn" onclick="nextStep(1)">Розпочати тестування</button>
     </div>
@@ -186,9 +180,7 @@
     
     <div class="timer-box">Час: <span id="tmt-timer">0.0</span> с | Помилок: <span id="tmt-errors">0</span></div>
     
-    <div class="tmt-field" id="tmt-container">
-      <!-- Generated via JS with non-overlapping coordinates -->
-    </div>
+    <div class="tmt-field" id="tmt-container"></div>
 
     <div class="subtest-row" style="margin-top: 1rem;">
       <span>Бали за Трейл Мейкінг (0-1):</span>
@@ -206,16 +198,14 @@
     <div class="step-indicator">Крок 3 з 7</div>
     <h2>Зорово-просторові / Виконавчі функції</h2>
     
-    <!-- Cube -->
     <div class="drawing-container">
-      <p style="font-weight: 600; margin-bottom: 0.5rem;">Зразок куба та полотно для малювання пацієнтом</p>
+      <p style="font-weight: 600; margin-bottom: 0.5rem;">Зразок куба[cite: 1] та полотно для малювання пацієнтом</p>
       <img src="images/cube.png" alt="Зразок куба" onerror="this.style.display='none'">
       <canvas id="cubeCanvas" width="300" height="140"></canvas>
       <button class="btn btn-secondary btn-small" onclick="clearCanvas('cubeCanvas')" style="margin-top: 0.5rem;">Очистити куб</button>
     </div>
     <div class="subtest-row"><span>Кубик (оцінка лікаря 0-1):</span><input type="number" id="m2" min="0" max="1" value="0"></div>
 
-    <!-- Clock -->
     <div class="drawing-container">
       <p style="font-weight: 600; margin-bottom: 0.5rem;">Малювання годинника (Час: 11:10)</p>
       <canvas id="clockCanvas" width="300" height="180"></canvas>
@@ -238,9 +228,9 @@
     <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Покажіть тварин пацієнту та зафіксуйте кількість правильних назв.</p>
     
     <div class="image-grid">
-      <div class="image-card"><img src="images/lion.png" alt="1" onerror="this.src=''"><br><span>1</span></div>
-      <div class="image-card"><img src="images/rhino.png" alt="2" onerror="this.src=''"><br><span>2</span></div>
-      <div class="image-card"><img src="images/camel.png" alt="3" onerror="this.src=''"><br><span>3</span></div>
+      <div class="image-card"><img src="images/lion.png" alt="Лев" onerror="this.src=''"></div>
+      <div class="image-card"><img src="images/rhino.png" alt="Носоріг" onerror="this.src=''"></div>
+      <div class="image-card"><img src="images/camel.png" alt="Верблюд" onerror="this.src=''"></div>
     </div>
 
     <div class="subtest-row"><span>Називання (0-3):</span><input type="number" id="m6" min="0" max="3" value="0"></div>
@@ -308,13 +298,11 @@
 </main>
 
 <script>
-  let currentStep = 0;
-  let GOOGLE_SCRIPT_URL = "";
-  document.getElementById('test-date').valueAsDate = new Date();
+  // Посилання вшите автоматично намертво
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3b8EVN9RgNix9OrtPQljpEvGfLcpAPKg1yRn8YJLMya6wH1vnUlaFVlj4J78S7Hce/exec";
 
-  if(localStorage.getItem('moca_script_url')) {
-    document.getElementById('script-url').value = localStorage.getItem('moca_script_url');
-  }
+  let currentStep = 0;
+  document.getElementById('test-date').valueAsDate = new Date();
 
   function showStep(step) {
     document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -328,15 +316,10 @@
       const pib = document.getElementById('pib').value.trim();
       const age = document.getElementById('age').value;
       const edu = document.getElementById('education').value;
-      const url = document.getElementById('script-url').value.trim();
 
       if(!pib || !age || !edu) {
         alert("Будь ласка, заповніть ПІБ, вік та рівень освіти пацієнта.");
         return;
-      }
-      if(url) {
-        GOOGLE_SCRIPT_URL = url;
-        localStorage.setItem('moca_script_url', url);
       }
     }
     currentStep = step;
@@ -491,11 +474,6 @@
 
   // --- Submit to Google Sheet ---
   function submitMoCA() {
-    if (!GOOGLE_SCRIPT_URL) {
-      alert("Не вказано посилання на Google Apps Script URL!");
-      return;
-    }
-
     calcTotal();
 
     const payload = {
